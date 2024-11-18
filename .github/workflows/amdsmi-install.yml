@@ -6,7 +6,7 @@ on:
 jobs:
   build-and-install-deb:
     name: Build and Install on Debian-based Systems
-    runs-on: compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024091101
+    runs-on: [self-hosted, Linux, X64, dev, ubuntu20.04]
     strategy:
       matrix:
         os:
