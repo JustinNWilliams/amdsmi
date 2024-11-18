@@ -6,7 +6,10 @@ on:
 jobs:  
   build-and-install-deb:  
     name: Build and Install on Debian-based Systems  
-    runs-on: [self-hosted, Linux, X64, dev, ubuntu20.04]  
+    runs-on: [self-hosted, Linux, X64, dev, ubuntu20.04] 
+    container:  
+      image: ${{ matrix.docker_image }}  
+      options: --rm -t --privileged --volume
     strategy:  
       matrix:  
         os:  
@@ -33,10 +36,10 @@ jobs:
   
       - name: Setup Container on ${{ matrix.os }}  
         run: |  
-          docker run --rm -t --privileged --volume "${{ github.workspace }}:/src:rw" "${{ matrix.docker_image }}" /bin/bash -c "set -e && cd /src && echo 'Inside Docker Container on ${{ matrix.os }}'  
               set -e  
               cd /src  
-              
+              echo 'Inside Docker Container on ${{ matrix.os }}' 
+
       - name: Build AMD-SMI
         run: | 
           BUILD_FOLDER=/src/build
