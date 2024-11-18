@@ -6,7 +6,7 @@ on:
 jobs:
   build-and-install-deb:
     name: Build and Install on Debian-based Systems
-    runs-on: ubuntu-latest
+    runs-on: compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024091101
     strategy:
       matrix:
         os:
@@ -30,7 +30,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-
+      
       - name: Build and Install on ${{ matrix.os }}
         env:
           BUILD_FOLDER: /src/build
