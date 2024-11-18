@@ -10,7 +10,7 @@ jobs:
     strategy:  
       matrix:  
         include:  
-          - os: ubuntu20  
+          - os: ubuntu20 
             docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024091101"  
           - os: ubuntu22  
             docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-22.04-bld:2024091101"  
