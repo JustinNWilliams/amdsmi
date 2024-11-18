@@ -21,8 +21,9 @@ jobs:
       - name: Test Docker Container on ${{ matrix.os }}  
         run: |  
           echo "Testing Docker container for ${{ matrix.os }}"  
-          docker run "${{ matrix.docker_image }}" \  
-            /bin/bash -c 'echo "Hello from inside the ${{ matrix.os }} container!"'  
+          docker run \  
+          "${{ matrix.docker_image }}" \  
+          /bin/bash -c 'echo "Hello from inside the ${{ matrix.os }} container!"'    
   
   test-docker-run-rpm:  
     name: Test Docker Run on RPM-based Systems  
@@ -45,6 +46,6 @@ jobs:
       - name: Test Docker Container on ${{ matrix.os }}  
         run: |  
           echo "Testing Docker container for ${{ matrix.os }}"  
-          docker run --rm -t \  
-            "${{ matrix.docker_image }}" \  
-            /bin/bash -c 'echo "Hello from inside the ${{ matrix.os }} container!"'  
+          docker run \  
+          "${{ matrix.docker_image }}" \  
+          /bin/bash -c 'echo "Hello from inside the ${{ matrix.os }} container!"' 
