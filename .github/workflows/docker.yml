@@ -1,4 +1,4 @@
-name: Test Docker Containers for Multiple OS Versions  
+name: Test Docker Containers for Multiple OS Versions
   
 on:  
   push:  
