@@ -33,9 +33,10 @@ jobs:
   
       - name: Setup Container on ${{ matrix.os }}  
         run: |  
-          docker run --rm -ti --privileged --volume $(realpath ./):/src:rw compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024090301  
+          docker run --rm -t --privileged --volume "${{ github.workspace }}:/src:rw" "${{ matrix.docker_image }}" /bin/bash -c "set -e && cd /src && echo 'Inside Docker Container on ${{ matrix.os }}'  
               set -e  
               cd /src  
+              
       - name: Build AMD-SMI
         run: | 
           BUILD_FOLDER=/src/build
