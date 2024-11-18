@@ -33,18 +33,9 @@ jobs:
   
       - name: Build and Install on ${{ matrix.os }}  
         run: |  
-          docker run --rm -t --privileged \  
-            --volume "${{ github.workspace }}:/src:rw" \  
-            -e BUILD_FOLDER="/src/build" \  
-            -e DEB_BUILD="amd-smi-lib*99999-local_amd64.deb" \  
-            -e DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb" \  
-            -e BUILD_TESTS="${{ matrix.build_tests }}" \  
-            -e ENABLE_ESMI_LIB="${{ matrix.enable_esmi_lib }}" \  
-            -w /src \  
-            "${{ matrix.docker_image }}" \  
-            /bin/bash -c '  
+          docker run --rm -ti --privileged --volume $(realpath ./):/src:rw compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024090301  
               set -e  
-              shopt -s expand_aliases  
+              cd /src    
   
               echo "Building on OS: ${{ matrix.os }}"  
   
