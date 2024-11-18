@@ -1,0 +1,50 @@
+name: Test Docker Containers for Multiple OS Versions  
+  
+on:  
+  push:  
+  
+jobs:  
+  test-docker-run-deb:  
+    name: Test Docker Run on Debian-based Systems  
+    runs-on: [self-hosted, Linux, X64, dev, ubuntu20.04]  
+    strategy:  
+      matrix:  
+        include:  
+          - os: ubuntu20  
+            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024091101"  
+          - os: ubuntu22  
+            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-22.04-bld:2024091101"  
+          - os: ubuntu24  
+            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-24.04-bld:2024091101"  
+  
+    steps:  
+      - name: Test Docker Container on ${{ matrix.os }}  
+        run: |  
+          echo "Testing Docker container for ${{ matrix.os }}"  
+          docker run "${{ matrix.docker_image }}" \  
+            /bin/bash -c 'echo "Hello from inside the ${{ matrix.os }} container!"'  
+  
+  test-docker-run-rpm:  
+    name: Test Docker Run on RPM-based Systems  
+    runs-on: [self-hosted, Linux, X64, dev, ubuntu20.04]  
+    strategy:  
+      matrix:  
+        include:  
+          - os: sles  
+            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/sles-15.5:2024091101"  
+          - os: rhel8  
+            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/rhel-8.x-bld:2024110601"  
+          - os: rhel9  
+            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/rhel-9.x-bld:2024101501"  
+          - os: mariner2  
+            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/mariner-2.0:2024101501"  
+          - os: azurelinux3  
+            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/azurelinux-3:2024100701"  
+  
+    steps:  
+      - name: Test Docker Container on ${{ matrix.os }}  
+        run: |  
+          echo "Testing Docker container for ${{ matrix.os }}"  
+          docker run --rm -t \  
+            "${{ matrix.docker_image }}" \  
+            /bin/bash -c 'echo "Hello from inside the ${{ matrix.os }} container!"'  
