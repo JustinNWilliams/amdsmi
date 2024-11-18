@@ -31,205 +31,76 @@ jobs:
       - name: Checkout Repository  
         uses: actions/checkout@v3  
   
-      - name: Set up Cache Directory  
-        run: mkdir -p ${{ github.workspace }}/cache  
-  
-      - name: Cache APT Packages  
-        uses: actions/cache@v3  
-        id: cache-apt  
-        with:  
-          path: ${{ github.workspace }}/cache/apt  
-          key: ${{ runner.os }}-apt-${{ matrix.os }}  
-          restore-keys: |  
-            ${{ runner.os }}-apt-  
-  
-      - name: Build amdsmi Package on ${{ matrix.os }}  
-        env:  
-          CACHE_DIR: "/src/cache/apt"  
+      - name: Setup Container on ${{ matrix.os }}  
         run: |  
-          docker run --rm -t --privileged \  
-            --volume "${{ github.workspace }}:/src:rw" \  
-            -e BUILD_FOLDER="/src/build" \  
-            -e BUILD_TESTS="${{ matrix.build_tests }}" \  
-            -e ENABLE_ESMI_LIB="${{ matrix.enable_esmi_lib }}" \  
-            -e CACHE_DIR \  
-            "${{ matrix.docker_image }}" \  
-            /bin/bash -c "set -eux && cd /src && \  
-            echo 'Building on OS: ${{ matrix.os }}' && \  
-            if [ -d \"\$CACHE_DIR\" ]; then \  
-              cp -r \$CACHE_DIR/* /var/cache/apt/archives/; \  
-            fi && \  
-            apt-get update && \  
-            apt-get install -y --download-only wget gnupg2 cmake make g++ python3-argcomplete pkg-config git sudo software-properties-common && \  
-            cp /var/cache/apt/archives/* \$CACHE_DIR/; \  
-            ln -sf /var/cache/apt/archives /var/cache/apt/archives/partial; \  
-            apt-get install -y wget gnupg2 cmake make g++ python3-argcomplete pkg-config git sudo software-properties-common && \  
-            wget -qO - http://repo.radeon.com/rocm/rocm.gpg.key | apt-key add - && \  
-            echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/debian/ \$(lsb_release -cs) main' > /etc/apt/sources.list.d/rocm.list && \  
-            apt-get update && \  
-            apt-get install -y --download-only rocm-cmake rocm-device-libs rocm-utils rocminfo && \  
-            cp /var/cache/apt/archives/* \$CACHE_DIR/; \  
-            apt-get install -y rocm-cmake rocm-device-libs rocm-utils rocminfo && \  
-            rm -rf \$BUILD_FOLDER && mkdir -p \$BUILD_FOLDER && cd \$BUILD_FOLDER && \  
-            cmake .. -DBUILD_TESTS=\$BUILD_TESTS -DENABLE_ESMI_LIB=\$ENABLE_ESMI_LIB && \  
-            make -j \$(nproc) && \  
-            make package && \  
-            echo 'Build completed for ${{ matrix.os }}.'"  
+          docker run --rm -ti --privileged --volume $(realpath ./):/src:rw compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024090301  
+              set -e  
+              cd /src  
+      - name: Build AMD-SMI
+        run: | 
+          BUILD_FOLDER=/src/build
+          DEB_BUILD="amd-smi-lib*99999-local_amd64.deb"
+          DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"
+
+          # Build AMDSMI
+          rm -rf \${BUILD_FOLDER} && \
+                    mkdir -p \${BUILD_FOLDER} && \
+                    cd \${BUILD_FOLDER} && \
+                    cmake .. -DBUILD_TESTS=OFF -DENABLE_ESMI_LIB=OFF && \
+                    make -j \$(nproc) && \
+                    make package
+
+      - name: Install AMD-SMI
+        run: |
+          sudo ls && \
+                      sudo apt install -y \${BUILD_FOLDER}/\${DEB_BUILD} && \
+                      sudo ln -s /opt/rocm/bin/amd-smi /usr/local/bin && \
+                      cd -
+      - name: Check If Installed 
+        run: | 
+          python3 -m pip list | grep amd &&
+          python3 -m pip list | grep pip && 
+          python3 -m pip list | grep setuptools
+      
+      
+  # build-and-install-rpm:  
+  #   name: Build and Install on RPM-based Systems  
+  #   runs-on: [self-hosted, Linux, X64, dev, ubuntu20.04]  
+  #   strategy:  
+  #     matrix:  
+  #       include:  
+  #         - os: sles  
+  #           docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/sles-15.5:2024091101"  
+  #           package_manager: zypper 
+  #           build_tests: OFF  
+  #           enable_esmi_lib: OFF  
+  #         - os: rhel8  
+  #           docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/rhel-8.x-bld:2024110601"  
+  #           package_manager: dnf  
+  #           build_tests: ON  
+  #           enable_esmi_lib: OFF  
+  #         - os: rhel9  
+  #           docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/rhel-9.x-bld:2024101501"  
+  #           package_manager: dnf  
+  #           build_tests: ON  
+  #           enable_esmi_lib: OFF  
+  #         - os: mariner2  
+  #           docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/mariner-2.0:2024101501"  
+  #           package_manager: tdnf  
+  #           build_tests: ON  
+  #           enable_esmi_lib: OFF  
+  #         - os: azurelinux3  
+  #           docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/azurelinux-3:2024100701"  
+  #           package_manager: dnf  
+  #           build_tests: ON  
+  #           enable_esmi_lib: OFF  
   
-      - name: Upload Built Packages  
-        uses: actions/upload-artifact@v3  
-        with:  
-          name: amdsmi-deb-${{ matrix.os }}  
-          path: build/*.deb  
+  #   steps:  
+  #     - name: Checkout Repository  
+  #       uses: actions/checkout@v3  
   
-      - name: Install amdsmi Package on ${{ matrix.os }}  
-        run: |  
-          docker run --rm -t --privileged \  
-            --volume "${{ github.workspace }}:/src:rw" \  
-            "${{ matrix.docker_image }}" \  
-            /bin/bash -c "set -eux && cd /src && \  
-            echo 'Installing on OS: ${{ matrix.os }}' && \  
-            apt-get update && \  
-            apt-get install -y sudo && \  
-            sudo apt install -y ./build/*.deb && \  
-            sudo ln -s /opt/rocm/bin/amd-smi /usr/local/bin && \  
-            echo 'Installation completed for ${{ matrix.os }}.'"  
-  
-      - name: Verify amdsmi Installation on ${{ matrix.os }}  
-        run: |  
-          docker run --rm -t \  
-            --volume "${{ github.workspace }}:/src:rw" \  
-            "${{ matrix.docker_image }}" \  
-            /bin/bash -c "set -e && \  
-            if amd-smi --help > /dev/null 2>&1; then \  
-              echo 'amd-smi is installed on ${{ matrix.os }}.'; \  
-            else \  
-              echo 'amd-smi is not installed on ${{ matrix.os }}.'; \  
-              exit 1; \  
-            fi"  
-  
-  build-and-install-rpm:  
-    name: Build and Install on RPM-based Systems  
-    runs-on: [self-hosted, Linux, X64, dev, ubuntu20.04]  
-    strategy:  
-      matrix:  
-        include:  
-          - os: sles  
-            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/sles-15.5:2024091101"  
-            package_manager: zypper  
-            build_tests: OFF  
-            enable_esmi_lib: OFF  
-          - os: rhel8  
-            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/rhel-8.x-bld:2024110601"  
-            package_manager: dnf  
-            build_tests: ON  
-            enable_esmi_lib: OFF  
-          - os: rhel9  
-            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/rhel-9.x-bld:2024101501"  
-            package_manager: dnf  
-            build_tests: ON  
-            enable_esmi_lib: OFF  
-          - os: mariner2  
-            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/mariner-2.0:2024101501"  
-            package_manager: tdnf  
-            build_tests: ON  
-            enable_esmi_lib: OFF  
-          - os: azurelinux3  
-            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/azurelinux-3:2024100701"  
-            package_manager: dnf  
-            build_tests: ON  
-            enable_esmi_lib: OFF  
-  
-    steps:  
-      - name: Checkout Repository  
-        uses: actions/checkout@v3  
-  
-      - name: Set up Cache Directory  
-        run: mkdir -p ${{ github.workspace }}/cache  
-  
-      - name: Cache RPM Packages  
-        uses: actions/cache@v3  
-        id: cache-rpm  
-        with:  
-          path: ${{ github.workspace }}/cache/rpm  
-          key: ${{ runner.os }}-rpm-${{ matrix.os }}  
-          restore-keys: |  
-            ${{ runner.os }}-rpm-  
-  
-      - name: Build amdsmi Package on ${{ matrix.os }}  
-        env:  
-          CACHE_DIR: "/src/cache/rpm"  
-        run: |  
-          docker run --rm -t --privileged \  
-            --volume "${{ github.workspace }}:/src:rw" \  
-            -e BUILD_FOLDER="/src/build" \  
-            -e BUILD_TESTS="${{ matrix.build_tests }}" \  
-            -e ENABLE_ESMI_LIB="${{ matrix.enable_esmi_lib }}" \  
-            -e PACKAGE_MANAGER="${{ matrix.package_manager }}" \  
-            -e CACHE_DIR \  
-            "${{ matrix.docker_image }}" \  
-            /bin/bash -c "set -eux && cd /src && \  
-            echo 'Building on OS: ${{ matrix.os }}' && \  
-            if [ -d \"\$CACHE_DIR\" ]; then \  
-              mkdir -p /var/cache/yum; \  
-              cp -r \$CACHE_DIR/* /var/cache/yum/; \  
-            fi && \  
-            if [[ \"\$PACKAGE_MANAGER\" == \"dnf\" || \"\$PACKAGE_MANAGER\" == \"yum\" || \"\$PACKAGE_MANAGER\" == \"tdnf\" ]]; then \  
-              \$PACKAGE_MANAGER makecache; \  
-              \$PACKAGE_MANAGER install -y wget gnupg2 cmake make gcc gcc-c++ python3-argcomplete pkgconfig git sudo; \  
-            elif [[ \"\$PACKAGE_MANAGER\" == \"zypper\" ]]; then \  
-              zypper refresh; \  
-              zypper install -y wget gnupg2 cmake make gcc gcc-c++ python3-argcomplete pkg-config git sudo; \  
-            fi && \  
-            rpm --import http://repo.radeon.com/rocm/rocm.gpg.key && \  
-            echo -e '[ROCm]\\nname=ROCm\\nbaseurl=http://repo.radeon.com/rocm/yum/rpm\\nenabled=1\\ngpgcheck=0\\n' > /etc/yum.repos.d/rocm.repo && \  
-            if [[ \"\$PACKAGE_MANAGER\" == \"zypper\" ]]; then \  
-              zypper refresh && \  
-              zypper install -y --no-gpg-checks rocm-cmake rocm-device-libs rocm-utils rocminfo; \  
-            else \  
-              \$PACKAGE_MANAGER install -y rocm-cmake rocm-device-libs rocm-utils rocminfo; \  
-            fi && \  
-            if [ ! -d \"\$CACHE_DIR\" ]; then \  
-              mkdir -p \$CACHE_DIR; \  
-            fi && \  
-            cp -r /var/cache/yum/* \$CACHE_DIR/ || true; \  
-            rm -rf \$BUILD_FOLDER && mkdir -p \$BUILD_FOLDER && cd \$BUILD_FOLDER && \  
-            cmake .. -DBUILD_TESTS=\$BUILD_TESTS -DENABLE_ESMI_LIB=\$ENABLE_ESMI_LIB && \  
-            make -j \$(nproc) && \  
-            make package && \  
-            echo 'Build completed for ${{ matrix.os }}.'"  
-  
-      - name: Upload Built Packages  
-        uses: actions/upload-artifact@v3  
-        with:  
-          name: amdsmi-rpm-${{ matrix.os }}  
-          path: build/*.rpm  
-  
-      - name: Install amdsmi Package on ${{ matrix.os }}  
-        run: |  
-          docker run --rm -t --privileged \  
-            --volume "${{ github.workspace }}:/src:rw" \  
-            -e PACKAGE_MANAGER="${{ matrix.package_manager }}" \  
-            "${{ matrix.docker_image }}" \  
-            /bin/bash -c "set -eux && cd /src && \  
-            echo 'Installing on OS: ${{ matrix.os }}' && \  
-            if [[ \"\$PACKAGE_MANAGER\" == \"dnf\" || \"\$PACKAGE_MANAGER\" == \"yum\" || \"\$PACKAGE_MANAGER\" == \"tdnf\" ]]; then \  
-              sudo \$PACKAGE_MANAGER install -y ./build/*.rpm; \  
-            elif [[ \"\$PACKAGE_MANAGER\" == \"zypper\" ]]; then \  
-              sudo zypper --no-refresh --no-gpg-checks install -y ./build/*.rpm; \  
-            fi && \  
-            sudo ln -s /opt/rocm/bin/amd-smi /usr/local/bin && \  
-            echo 'Installation completed for ${{ matrix.os }}.'"  
-  
-      - name: Verify amdsmi Installation on ${{ matrix.os }}  
-        run: |  
-          docker run --rm -t \  
-            --volume "${{ github.workspace }}:/src:rw" \  
-            "${{ matrix.docker_image }}" \  
-            /bin/bash -c "set -e && \  
-            if amd-smi --help > /dev/null 2>&1; then \  
-              echo 'amd-smi is installed on ${{ matrix.os }}.'; \  
-            else \  
-              echo 'amd-smi is not installed on ${{ matrix.os }}.'; \  
-              exit 1; \  
-            fi"  
+  #     - name: Build and Install on ${{ matrix.os }}  
+  #       run: |
+  #         docker run --rm -ti --privileged --volume $(realpath ./):/src:rw compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024090301  
+  #             set -e  
+  #             cd /src  
