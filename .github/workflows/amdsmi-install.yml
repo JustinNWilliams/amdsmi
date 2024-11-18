@@ -35,21 +35,12 @@ jobs:
         env:  
           BUILD_FOLDER: /src/build  
           DEB_BUILD: "amd-smi-lib*99999-local_amd64.deb"  
+          DEB_BUILD_TEST: "amd-smi-lib-tests*99999-local_amd64.deb"
         run: |  
-          docker run --rm -t --privileged \  
-            --volume "${{ github.workspace }}:/src:rw" \  
-            -e BUILD_FOLDER \  
-            -e DEB_BUILD \  
-            -w /src \  
-            ${{ matrix.docker_image }} \  
-            /bin/bash -c "  
-              set -e  
-              shopt -s expand_aliases  
-  
-              export BUILD_FOLDER=/src/build  
-              export DEB_BUILD='amd-smi-lib*99999-local_amd64.deb'  
-              export DEB_BUILD_TEST='amd-smi-lib-tests*99999-local_amd64.deb'  
-  
+          sudo docker run --rm -ti \
+                  --privileged \
+                  --volume $(realpath ./):/src:rw \
+                  "${{ matrix.docker_image }}" 
               echo 'Building on OS: ${{ matrix.os }}'  
   
               # Install dependencies  
@@ -124,6 +115,7 @@ jobs:
         env:  
           BUILD_FOLDER: /src/build  
           RPM_BUILD: "amd-smi-lib*99999-local*.x86_64.rpm"  
+          RPM_BUILD_TEST: "amd-smi-lib-tests*99999-local.x86_64.rpm"
         run: |  
           docker run --rm -t --privileged \  
             --volume "${{ github.workspace }}:/src:rw" \  
