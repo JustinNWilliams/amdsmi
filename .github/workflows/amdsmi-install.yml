@@ -32,16 +32,19 @@ jobs:
         uses: actions/checkout@v3  
         
       - name: Build and Install on ${{ matrix.os }}  
-        env:  
-          BUILD_FOLDER: /src/build  
-          DEB_BUILD: "amd-smi-lib*99999-local_amd64.deb"  
-          DEB_BUILD_TEST: "amd-smi-lib-tests*99999-local_amd64.deb"
         run: |  
-          sudo docker run --rm -ti \
-                  --privileged \
-                  --volume $(realpath ./):/src:rw \
-                  "${{ matrix.docker_image }}" 
-              echo 'Building on OS: ${{ matrix.os }}'  
+            docker run --rm -t --privileged \  
+              --volume "${{ github.workspace }}:/src:rw" \  
+              "compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024091101" \  
+              /bin/bash -c "  
+                set -e  
+                shopt -s expand_aliases  
+          
+                export BUILD_FOLDER=/src/build  
+                export DEB_BUILD='amd-smi-lib*99999-local_amd64.deb'  
+                export DEB_BUILD_TEST='amd-smi-lib-tests*99999-local_amd64.deb'  
+          
+                echo 'Building on OS: ubuntu20'   
   
               # Install dependencies  
               apt-get update  
