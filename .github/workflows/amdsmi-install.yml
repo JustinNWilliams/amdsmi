@@ -30,41 +30,43 @@ jobs:
     steps:  
       - name: Checkout Repository  
         uses: actions/checkout@v3  
-        
+  
       - name: Build and Install on ${{ matrix.os }}  
         run: |  
-            docker run --rm -t --privileged \  
-              --volume "${{ github.workspace }}:/src:rw" \  
-              "compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024091101" \  
-              /bin/bash -c "  
-                set -e  
-                shopt -s expand_aliases  
-          
-                export BUILD_FOLDER=/src/build  
-                export DEB_BUILD='amd-smi-lib*99999-local_amd64.deb'  
-                export DEB_BUILD_TEST='amd-smi-lib-tests*99999-local_amd64.deb'  
-          
-                echo 'Building on OS: ubuntu20'   
+          docker run --rm -t --privileged \  
+            --volume "${{ github.workspace }}:/src:rw" \  
+            -e BUILD_FOLDER="/src/build" \  
+            -e DEB_BUILD="amd-smi-lib*99999-local_amd64.deb" \  
+            -e DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb" \  
+            -e BUILD_TESTS="${{ matrix.build_tests }}" \  
+            -e ENABLE_ESMI_LIB="${{ matrix.enable_esmi_lib }}" \  
+            -w /src \  
+            "${{ matrix.docker_image }}" \  
+            /bin/bash -c '  
+              set -e  
+              shopt -s expand_aliases  
+  
+              echo "Building on OS: ${{ matrix.os }}"  
   
               # Install dependencies  
               apt-get update  
               apt-get install -y wget gnupg2 cmake make g++ python3-argcomplete pkg-config git sudo software-properties-common  
               wget -qO - http://repo.radeon.com/rocm/rocm.gpg.key | apt-key add -  
-              echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/debian/ $(lsb_release -cs) main' > /etc/apt/sources.list.d/rocm.list  
+              echo "deb [arch=amd64] http://repo.radeon.com/rocm/apt/debian/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/rocm.list  
               apt-get update  
               apt-get install -y rocm-cmake rocm-device-libs rocm-utils rocminfo  
   
               # Define aliases  
-              alias amdsmi_build='rm -rf \${BUILD_FOLDER} && \  
-                                  mkdir -p \${BUILD_FOLDER} && \  
-                                  cd \${BUILD_FOLDER} && \  
-                                  cmake .. -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }} && \  
+              alias amdsmi_build="rm -rf \$BUILD_FOLDER && \  
+                                  mkdir -p \$BUILD_FOLDER && \  
+                                  cd \$BUILD_FOLDER && \  
+                                  cmake .. -DBUILD_TESTS=\$BUILD_TESTS -DENABLE_ESMI_LIB=\$ENABLE_ESMI_LIB && \  
                                   make -j \$(nproc) && \  
-                                  make package'  
+                                  make package"  
   
-              alias amdsmi_install_package_deb='sudo apt install -y \${BUILD_FOLDER}/\${DEB_BUILD} && \  
+              alias amdsmi_install_package_deb="sudo apt install -y \$BUILD_FOLDER/\$DEB_BUILD && \  
                                                 sudo ln -s /opt/rocm/bin/amd-smi /usr/local/bin && \  
-                                                cd -'  
+                                                cd -"  
   
               # Build and Install  
               amdsmi_build  
@@ -75,8 +77,8 @@ jobs:
               python3 -m pip list | grep pip || true  
               python3 -m pip list | grep setuptools || true  
   
-              echo 'Build and installation completed for ${{ matrix.os }}.'  
-            "  
+              echo "Build and installation completed for ${{ matrix.os }}."  
+            '  
   
   build-and-install-rpm:  
     name: Build and Install on RPM-based Systems  
@@ -115,23 +117,84 @@ jobs:
         uses: actions/checkout@v3  
   
       - name: Build and Install on ${{ matrix.os }}  
-        env:  
-          BUILD_FOLDER: /src/build  
-          RPM_BUILD: "amd-smi-lib*99999-local*.x86_64.rpm"  
-          RPM_BUILD_TEST: "amd-smi-lib-tests*99999-local.x86_64.rpm"
         run: |  
           docker run --rm -t --privileged \  
             --volume "${{ github.workspace }}:/src:rw" \  
-            -e BUILD_FOLDER \  
-            -e RPM_BUILD \  
+            -e BUILD_FOLDER="/src/build" \  
+            -e RPM_BUILD="amd-smi-lib*99999-local*.x86_64.rpm" \  
+            -e RPM_BUILD_TEST="amd-smi-lib-tests*99999-local.x86_64.rpm" \  
+            -e BUILD_TESTS="${{ matrix.build_tests }}" \  
+            -e ENABLE_ESMI_LIB="${{ matrix.enable_esmi_lib }}" \  
+            -e PACKAGE_MANAGER="${{ matrix.package_manager }}" \  
             -w /src \  
-            ${{ matrix.docker_image }} \  
-            /bin/bash -c "  
+            "${{ matrix.docker_image }}" \  
+            /bin/bash -c '  
               set -e  
               shopt -s expand_aliases  
   
-              export BUILD_FOLDER=/src/build  
-              export RPM_BUILD='amd-smi-lib*99999-local*.x86_64.rpm'  
-              export RPM_BUILD_TEST='amd-smi-lib-tests*99999-local.x86_64.rpm'  
+              echo "Building on OS: ${{ matrix.os }}"  
   
-              echo 'Building on OS: ${{ matrix.os }}'  
+              # Install dependencies based on package manager  
+              if [[ "$PACKAGE_MANAGER" == "yum" ]]; then  
+                yum install -y epel-release  
+                yum install -y wget gnupg2 cmake make gcc gcc-c++ python3-argcomplete pkgconfig git sudo  
+                rpm --import http://repo.radeon.com/rocm/rocm.gpg.key  
+                echo -e "[ROCm]\nname=ROCm\nbaseurl=http://repo.radeon.com/rocm/yum/rpm\nenabled=1\n" > /etc/yum.repos.d/rocm.repo  
+                yum install -y rocm-cmake rocm-device-libs rocm-utils rocminfo  
+  
+              elif [[ "$PACKAGE_MANAGER" == "dnf" ]]; then  
+                dnf install -y epel-release  
+                dnf install -y wget gnupg2 cmake make gcc gcc-c++ python3-argcomplete pkgconfig git sudo  
+                rpm --import http://repo.radeon.com/rocm/rocm.gpg.key  
+                echo -e "[ROCm]\nname=ROCm\nbaseurl=http://repo.radeon.com/rocm/yum/rpm\nenabled=1\n" > /etc/yum.repos.d/rocm.repo  
+                dnf install -y rocm-cmake rocm-device-libs rocm-utils rocminfo  
+  
+              elif [[ "$PACKAGE_MANAGER" == "zypper" ]]; then  
+                zypper refresh  
+                zypper install -y wget gnupg2 cmake make gcc gcc-c++ python3-argcomplete pkg-config git sudo  
+                rpm --import http://repo.radeon.com/rocm/rocm.gpg.key  
+                zypper ar -f http://repo.radeon.com/rocm/zyp/15/ rocm  
+                zypper refresh  
+                zypper install -y --no-gpg-checks rocm-cmake rocm-device-libs rocm-utils rocminfo  
+  
+              elif [[ "$PACKAGE_MANAGER" == "tdnf" ]]; then  
+                tdnf install -y wget gnupg2 cmake make gcc gcc-c++ python3-argcomplete pkgconfig git sudo  
+                rpm --import http://repo.radeon.com/rocm/rocm.gpg.key  
+                echo -e "[ROCm]\nname=ROCm\nbaseurl=http://repo.radeon.com/rocm/yum/rpm\nenabled=1\n" > /etc/yum.repos.d/rocm.repo  
+                tdnf install -y rocm-cmake rocm-device-libs rocm-utils rocminfo  
+              fi  
+  
+              # Define aliases  
+              if [[ "$PACKAGE_MANAGER" == "zypper" ]]; then  
+                alias amdsmi_build="rm -rf \$BUILD_FOLDER && \  
+                                    mkdir -p \$BUILD_FOLDER && \  
+                                    cd \$BUILD_FOLDER && \  
+                                    cmake .. -DBUILD_TESTS=\$BUILD_TESTS -DENABLE_ESMI_LIB=\$ENABLE_ESMI_LIB && \  
+                                    make -j \$(nproc) && \  
+                                    make package"  
+                alias amdsmi_install_package_rpm="sudo zypper --no-refresh --no-gpg-checks install -y \$BUILD_FOLDER/\$RPM_BUILD && \  
+                                                  sudo ln -s /opt/rocm/bin/amd-smi /usr/local/bin && \  
+                                                  cd -"  
+              else  
+                alias amdsmi_build="rm -rf \$BUILD_FOLDER && \  
+                                    mkdir -p \$BUILD_FOLDER && \  
+                                    cd \$BUILD_FOLDER && \  
+                                    cmake .. -DBUILD_TESTS=\$BUILD_TESTS -DENABLE_ESMI_LIB=\$ENABLE_ESMI_LIB && \  
+                                    make -j \$(nproc) && \  
+                                    make package"  
+                alias amdsmi_install_package_rpm="sudo \$PACKAGE_MANAGER install -y \$BUILD_FOLDER/\$RPM_BUILD && \  
+                                                  sudo ln -s /opt/rocm/bin/amd-smi /usr/bin && \  
+                                                  cd -"  
+              fi  
+  
+              # Build and Install  
+              amdsmi_build  
+              amdsmi_install_package_rpm  
+  
+              # Verify installation  
+              python3 -m pip list | grep amd || true  
+              python3 -m pip list | grep pip || true  
+              python3 -m pip list | grep setuptools || true  
+  
+              echo "Build and installation completed for ${{ matrix.os }}."  
+            '  
