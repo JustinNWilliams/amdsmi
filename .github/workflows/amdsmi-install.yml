@@ -33,13 +33,7 @@ jobs:
   
       - name: Build and Install on ${{ matrix.os }}  
         run: |  
-          docker run --rm -t --privileged \  
-            --volume "${{ github.workspace }}:/src:rw" \  
-            "${{ matrix.docker_image }}" \  
-            /bin/bash -c "  
-              set -e  
-              cd /src  
-              echo 'Inside Docker Container on ${{ matrix.os }}'  
+          docker run --rm -t --privileged --volume "${{ github.workspace }}:/src:rw" "${{ matrix.docker_image }}" /bin/bash -c " set -e cd /src echo 'Inside Docker Container on ${{ matrix.os }}'  
   
               # Build AMD-SMI  
               BUILD_FOLDER=/src/build  
