@@ -43,7 +43,7 @@ jobs:
         include:  
           - os: sles  
             docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/sles-15.5:2024091101"  
-            package_manager: zypper  
+            package_manager: zypper 
             build_tests: OFF  
             enable_esmi_lib: OFF  
           - os: rhel8  
