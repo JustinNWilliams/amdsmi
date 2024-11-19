@@ -60,7 +60,7 @@ jobs:
             DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"  
     
             # Remove existing build folder if it exists  
-            rm -rf $BUILD_FOLDER  
+            sudo rm -rf $BUILD_FOLDER  
             mkdir -p $BUILD_FOLDER  
             cd $BUILD_FOLDER  
             cmake .. -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}  
@@ -68,8 +68,8 @@ jobs:
             make package  
     
             # Install AMD-SMI  
-            sudo apt install -y $BUILD_FOLDER/$DEB_BUILD  
-            sudo ln -s /opt/rocm/bin/amd-smi /usr/local/bin  
+            apt install -y $BUILD_FOLDER/$DEB_BUILD  
+            ln -s /opt/rocm/bin/amd-smi /usr/local/bin  
     
             # Check If Installed  
             python3 -m pip list | grep amd  
