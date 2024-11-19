@@ -28,44 +28,45 @@ jobs:
             enable_esmi_lib: OFF  
   
     steps:  
-    - name: Checkout Repository  
-      uses: actions/checkout@v3  
-    
-    - name: Build and Install on ${{ matrix.os }}  
-      uses: addnab/docker-run-action@v3  
-      with:  
-        registry: compute-artifactory.amd.com:5000  
-        image: ${{ matrix.docker_image }}  
-        options: >  
-           --privileged  
+      - name: Checkout Repository  
+        uses: actions/checkout@v3  
+  
+      - name: Build and Install on ${{ matrix.os }}  
+        uses: addnab/docker-run-action@v3  
+        with:  
+          username: ${{ secrets.DOCKER_USERNAME }}  
+          password: ${{ secrets.DOCKER_PASSWORD }}  
+          registry: compute-artifactory.amd.com:5000  
+          image: ${{ matrix.docker_image }}  
+          options: >  
+            --privileged  
             -v ${{ github.workspace }}:/src:rw  
           run: |  
-              set -e  
-              cd /src  
-              echo 'Inside Docker Container on ${{ matrix.os }}'  
-    
-              # Build AMD-SMI  
-              BUILD_FOLDER=/src/build  
-              DEB_BUILD="amd-smi-lib*99999-local_amd64.deb"  
-              DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"  
-    
-              rm -rf $BUILD_FOLDER  
-              mkdir -p $BUILD_FOLDER  
-              cd $BUILD_FOLDER  
-              cmake .. -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}  
-              make -j $(nproc)  
-              make package  
-    
-              # Install AMD-SMI  
-              sudo apt install -y $BUILD_FOLDER/$DEB_BUILD  
-              sudo ln -s /opt/rocm/bin/amd-smi /usr/local/bin  
-    
-              # Check If Installed  
-              python3 -m pip list | grep amd  
-              python3 -m pip list | grep pip  
-              python3 -m pip list | grep setuptools 
-
-      
+            set -e  
+            cd /src  
+            echo 'Inside Docker Container on ${{ matrix.os }}'  
+  
+            # Build AMD-SMI  
+            BUILD_FOLDER=/src/build  
+            DEB_BUILD="amd-smi-lib*99999-local_amd64.deb"  
+            DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"  
+  
+            rm -rf $BUILD_FOLDER  
+            mkdir -p $BUILD_FOLDER  
+            cd $BUILD_FOLDER  
+            cmake .. -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}  
+            make -j $(nproc)  
+            make package  
+  
+            # Install AMD-SMI  
+            sudo apt install -y $BUILD_FOLDER/$DEB_BUILD  
+            sudo ln -s /opt/rocm/bin/amd-smi /usr/local/bin  
+  
+            # Check If Installed  
+            python3 -m pip list | grep amd  
+            python3 -m pip list | grep pip  
+            python3 -m pip list | grep setuptools  
+ 
   # build-and-install-rpm:  
   #   name: Build and Install on RPM-based Systems  
   #   runs-on: [self-hosted, Linux, X64, dev, ubuntu20.04]  
