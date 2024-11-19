@@ -31,11 +31,11 @@ jobs:
       - name: Checkout Repository  
         uses: actions/checkout@v3  
   
-      - name: Get UID and GID  
-        id: uid_gid  
-        run: |  
-          echo "UID=$(id -u)" >> $GITHUB_OUTPUT  
-          echo "GID=$(id -g)" >> $GITHUB_OUTPUT  
+      # - name: Get UID and GID  
+      #   id: uid_gid  
+      #   run: |  
+      #     echo "UID=$(id -u)" >> $GITHUB_OUTPUT  
+      #     echo "GID=$(id -g)" >> $GITHUB_OUTPUT  
   
       - name: Build and Install on ${{ matrix.os }}  
         uses: addnab/docker-run-action@v3  
@@ -45,7 +45,6 @@ jobs:
           options: >  
             --privileged  
             -v ${{ github.workspace }}:/src:rw  
-            --user ${{ steps.uid_gid.outputs.UID }}:${{ steps.uid_gid.outputs.GID }}  
           run: |  
             set -e  
             cd /src  
