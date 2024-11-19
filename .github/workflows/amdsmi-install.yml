@@ -56,7 +56,7 @@ jobs:
             DEB_BUILD="amd-smi-lib*99999-local_amd64.deb"  
             DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"  
     
-            rm -rf $BUILD_FOLDER  
+            sudo rm -rf $BUILD_FOLDER  
             mkdir -p $BUILD_FOLDER  
             cd $BUILD_FOLDER  
             cmake .. -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}  
