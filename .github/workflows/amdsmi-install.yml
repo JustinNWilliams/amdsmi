@@ -59,8 +59,6 @@ jobs:
             DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"  
     
             # Remove existing build folder if it exists  
-            sudo rm -rf $BUILD_FOLDER  
-            mkdir -p $BUILD_FOLDER  
             cd $BUILD_FOLDER  
             cmake .. -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}  
             make -j $(nproc)  
