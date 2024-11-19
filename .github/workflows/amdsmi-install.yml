@@ -31,23 +31,24 @@ jobs:
       - name: Checkout Repository  
         uses: actions/checkout@v3  
   
-      - name: Get UID and GID  
-        id: uid_gid  
+      - name: Get Host UID and GID  
+        id: host-info  
         run: |  
-          echo "UID=$(id -u)" >> $GITHUB_OUTPUT  
-          echo "GID=$(id -g)" >> $GITHUB_OUTPUT  
+          echo "HOST_UID=$(id -u)" >> $GITHUB_ENV  
+          echo "HOST_GID=$(id -g)" >> $GITHUB_ENV  
   
       - name: Build and Install on ${{ matrix.os }}  
         uses: addnab/docker-run-action@v3  
         env:  
           HOST_UID: ${{ env.HOST_UID }}  
           HOST_GID: ${{ env.HOST_GID }}  
-        with:    
+        with:  
           registry: compute-artifactory.amd.com:5000  
           image: ${{ matrix.docker_image }}  
           options: >  
             --privileged  
             -v ${{ github.workspace }}:/src:rw  
+            --user ${{ env.HOST_UID }}:${{ env.HOST_GID }}  
           run: |  
             set -e  
             cd /src  
@@ -57,8 +58,9 @@ jobs:
             BUILD_FOLDER=/src/build  
             DEB_BUILD="amd-smi-lib*99999-local_amd64.deb"  
             DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"  
-
-            sudo rm -rf $BUILD_FOLDER  
+    
+            # Remove existing build folder if it exists  
+            rm -rf $BUILD_FOLDER  
             mkdir -p $BUILD_FOLDER  
             cd $BUILD_FOLDER  
             cmake .. -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}  
