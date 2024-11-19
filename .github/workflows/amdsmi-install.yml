@@ -31,14 +31,17 @@ jobs:
       - name: Checkout Repository  
         uses: actions/checkout@v3  
   
-      # - name: Get UID and GID  
-      #   id: uid_gid  
-      #   run: |  
-      #     echo "UID=$(id -u)" >> $GITHUB_OUTPUT  
-      #     echo "GID=$(id -g)" >> $GITHUB_OUTPUT  
+      - name: Get UID and GID  
+        id: uid_gid  
+        run: |  
+          echo "UID=$(id -u)" >> $GITHUB_OUTPUT  
+          echo "GID=$(id -g)" >> $GITHUB_OUTPUT  
   
       - name: Build and Install on ${{ matrix.os }}  
         uses: addnab/docker-run-action@v3  
+        env:  
+          HOST_UID: ${{ env.HOST_UID }}  
+          HOST_GID: ${{ env.HOST_GID }}  
         with:    
           registry: compute-artifactory.amd.com:5000  
           image: ${{ matrix.docker_image }}  
