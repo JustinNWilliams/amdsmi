@@ -39,16 +39,15 @@ jobs:
   
       - name: Build and Install on ${{ matrix.os }} 
         uses: addnab/docker-run-action@v3  
-        env:  
-          HOST_UID: ${{ env.HOST_UID }}  
-          HOST_GID: ${{ env.HOST_GID }}  
+        # env:  
+        #   HOST_UID: ${{ env.HOST_UID }}  
+        #   HOST_GID: ${{ env.HOST_GID }}  
         with:  
           registry: compute-artifactory.amd.com:5000  
           image: ${{ matrix.docker_image }}  
           options: >  
             --privileged  
             -v ${{ github.workspace }}:/src:rw  
-            --user ${{ env.HOST_UID }}:${{ env.HOST_GID }}  
           run: |  
             set -e  
             cd /src  
