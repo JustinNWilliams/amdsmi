@@ -55,7 +55,8 @@ jobs:
             BUILD_FOLDER=/src/build  
             DEB_BUILD="amd-smi-lib*99999-local_amd64.deb"  
             DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"  
-    
+
+            sudo chown -R runner:runner build/ 
             sudo rm -rf $BUILD_FOLDER  
             mkdir -p $BUILD_FOLDER  
             cd $BUILD_FOLDER  
