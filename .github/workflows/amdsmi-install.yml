@@ -37,24 +37,25 @@ jobs:
           echo "HOST_UID=$(id -u)" >> $GITHUB_ENV  
           echo "HOST_GID=$(id -g)" >> $GITHUB_ENV  
   
-      - name: Build and Install on ${{ matrix.os }} 
+      - name: Build and Install on ${{ matrix.os }}  
         uses: addnab/docker-run-action@v3  
-        # env:  
-        #   HOST_UID: ${{ env.HOST_UID }}  
-        #   HOST_GID: ${{ env.HOST_GID }}  
+        env:  
+          HOST_UID: ${{ env.HOST_UID }}  
+          HOST_GID: ${{ env.HOST_GID }}  
         with:  
           registry: compute-artifactory.amd.com:5000  
           image: ${{ matrix.docker_image }}  
-          options: >  
-            --privileged  
-            -v ${{ github.workspace }}:/src:rw  
+          options: |  
+            --privileged \  
+            -v ${{ github.workspace }}:/src:rw \  
+            --user ${{ env.HOST_UID }}:${{ env.HOST_GID }}  
           run: |  
             set -e  
-            cd /src 
+            cd /src  
             echo 'Inside Docker Container on ${{ matrix.os }}'  
     
             # Build AMD-SMI  
-            BUILD_FOLDER=/home/runner/actions-runner/_work/amdsmi/amdsmi/build  
+            BUILD_FOLDER=/src/build  
             DEB_BUILD="amd-smi-lib*99999-local_amd64.deb"  
             DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"  
     
@@ -67,15 +68,15 @@ jobs:
             make package  
     
             # Install AMD-SMI  
-            apt install -y $BUILD_FOLDER/$DEB_BUILD  
-            ln -s /opt/rocm/bin/amd-smi /usr/local/bin  
+            sudo apt install -y $BUILD_FOLDER/$DEB_BUILD  
+            sudo ln -s /opt/rocm/bin/amd-smi /usr/local/bin  
     
             # Check If Installed  
             python3 -m pip list | grep amd  
             python3 -m pip list | grep pip  
             python3 -m pip list | grep setuptools  
- 
- 
+  
+  # Uncomment and adjust the following section for RPM-based systems if needed  
   # build-and-install-rpm:  
   #   name: Build and Install on RPM-based Systems  
   #   runs-on: [self-hosted, Linux, X64, dev, ubuntu20.04]  
@@ -84,36 +85,14 @@ jobs:
   #       include:  
   #         - os: sles  
   #           docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/sles-15.5:2024091101"  
-  #           package_manager: zypper 
+  #           package_manager: zypper  
   #           build_tests: OFF  
   #           enable_esmi_lib: OFF  
-  #         - os: rhel8  
-  #           docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/rhel-8.x-bld:2024110601"  
-  #           package_manager: dnf  
-  #           build_tests: ON  
-  #           enable_esmi_lib: OFF  
-  #         - os: rhel9  
-  #           docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/rhel-9.x-bld:2024101501"  
-  #           package_manager: dnf  
-  #           build_tests: ON  
-  #           enable_esmi_lib: OFF  
-  #         - os: mariner2  
-  #           docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/mariner-2.0:2024101501"  
-  #           package_manager: tdnf  
-  #           build_tests: ON  
-  #           enable_esmi_lib: OFF  
-  #         - os: azurelinux3  
-  #           docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/azurelinux-3:2024100701"  
-  #           package_manager: dnf  
-  #           build_tests: ON  
-  #           enable_esmi_lib: OFF  
+  #         # Add other OS configurations as needed  
   
   #   steps:  
   #     - name: Checkout Repository  
   #       uses: actions/checkout@v3  
   
   #     - name: Build and Install on ${{ matrix.os }}  
-  #       run: |
-  #         docker run --rm -ti --privileged --volume $(realpath ./):/src:rw compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024090301  
-  #             set -e  
-  #             cd /src  
+  #       # Adjust build steps here  
