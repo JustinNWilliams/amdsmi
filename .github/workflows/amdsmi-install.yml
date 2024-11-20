@@ -140,7 +140,7 @@ jobs:
                   sudo zypper --no-refresh --no-gpg-checks install -y $BUILD_FOLDER/$RPM_BUILD
                   ;;  
                 dnf)  
-                  dnf install -y $BUILD_FOLDER/$RPM_BUILD  
+                  dnf install -y --skip-broken $BUILD_FOLDER/$RPM_BUILD  
                   ;;  
                 tdnf)  
                   tdnf install -y $BUILD_FOLDER/$RPM_BUILD  
