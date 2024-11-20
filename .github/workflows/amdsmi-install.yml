@@ -95,6 +95,11 @@ jobs:
               package_manager: tdnf  
               build_tests: OFF  
               enable_esmi_lib: OFF  
+            - os: Azure Linux 3
+              docker_image: compute-artifactory.amd.com:5000/rocm-base-images/azurelinux-3:2024100701
+              package_manager: dnf
+              build_tests: OFF
+              enable_esmi_lib: OFF
     
       steps:  
         - name: Checkout Repository  
