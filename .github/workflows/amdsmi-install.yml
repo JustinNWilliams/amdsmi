@@ -12,7 +12,6 @@ jobs:
         os:  
           - ubuntu20  
           - ubuntu22  
-          - ubuntu24  
         include:  
           - os: ubuntu20  
             docker_image: compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024091101  
@@ -22,10 +21,6 @@ jobs:
             docker_image: compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-22.04-bld:2024091101  
             build_tests: OFF  
             enable_esmi_lib: OFF  
-          # - os: ubuntu24  
-          #   docker_image: compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-24.04-bld:2024091101  
-          #   build_tests: OFF  
-          #   enable_esmi_lib: OFF  
   
     steps:  
       - name: Checkout Repository  
