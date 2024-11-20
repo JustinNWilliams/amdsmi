@@ -24,7 +24,7 @@ jobs:
   
     steps:  
       - name: Checkout Repository  
-        uses: actions/checkout@v3 
+        uses: actions/checkout@v4
         with:
           clean: false 
   
@@ -104,7 +104,7 @@ jobs:
     
       steps:  
         - name: Checkout Repository  
-          uses: actions/checkout@v3  
+          uses: actions/checkout@v4  
           with:  
             clean: false  
     
@@ -141,10 +141,7 @@ jobs:
                   ;;  
                 dnf)  
                   dnf install -y --skip-broken $BUILD_FOLDER/$RPM_BUILD  
-                  ;;  
-                tdnf)  
-                  tdnf install -y $BUILD_FOLDER/$RPM_BUILD  
-                  ;;  
+                  ;;   
                 *)  
                   echo "Unsupported package manager: ${{ matrix.package_manager }}"  
                   exit 1  
