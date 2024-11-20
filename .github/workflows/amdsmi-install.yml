@@ -29,7 +29,7 @@ jobs:
   
     steps:  
       - name: Checkout Repository  
-        uses: actions/checkout@v3 
+        uses: actions/checkout@v3  
   
       - name: Get Host UID and GID  
         id: host-info  
@@ -54,11 +54,13 @@ jobs:
             echo 'Inside Docker Container on ${{ matrix.os }}'  
     
             # Build AMD-SMI  
-            BUILD_FOLDER=/src/build  
+            BUILD_FOLDER=/home/runner/actions-runner/_work/amdsmi/amdsmi/build  
             DEB_BUILD="amd-smi-lib*99999-local_amd64.deb"  
             DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"  
     
             # Remove existing build folder if it exists  
+            sudo rm -rf $BUILD_FOLDER  
+            mkdir -p $BUILD_FOLDER  
             cd $BUILD_FOLDER  
             cmake .. -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}  
             make -j $(nproc)  
