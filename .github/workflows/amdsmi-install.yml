@@ -137,7 +137,6 @@ jobs:
                   sudo zypper --no-refresh --no-gpg-checks install -y $BUILD_FOLDER/$RPM_BUILD &&  
                   sudo ln -s /opt/rocm/bin/amd-smi /usr/local/bin &&  
                   cd -  
-                  ;;
                   ;;  
                 dnf)  
                   dnf install -y $BUILD_FOLDER/$RPM_BUILD  
