@@ -15,15 +15,15 @@ jobs:
           - ubuntu24  
         include:  
           - os: ubuntu20  
-            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024091101"  
+            docker_image: compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024091101  
             build_tests: OFF  
             enable_esmi_lib: OFF  
           - os: ubuntu22  
-            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-22.04-bld:2024091101"  
+            docker_image: compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-22.04-bld:2024091101  
             build_tests: OFF  
             enable_esmi_lib: OFF  
           - os: ubuntu24  
-            docker_image: "compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-24.04-bld:2024091101"  
+            docker_image: compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-24.04-bld:2024091101  
             build_tests: OFF  
             enable_esmi_lib: OFF  
   
@@ -43,11 +43,10 @@ jobs:
           HOST_UID: ${{ env.HOST_UID }}  
           HOST_GID: ${{ env.HOST_GID }}  
         with:  
-          registry: compute-artifactory.amd.com:5000  
           image: ${{ matrix.docker_image }}  
-          options: |  
-            --privileged \  
-            -v ${{ github.workspace }}:/src:rw \  
+          options: >  
+            --privileged  
+            -v ${{ github.workspace }}:/src:rw  
             --user ${{ env.HOST_UID }}:${{ env.HOST_GID }}  
           run: |  
             set -e  
@@ -60,7 +59,7 @@ jobs:
             DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"  
     
             # Remove existing build folder if it exists  
-            sudo rm -rf $BUILD_FOLDER  
+            rm -rf $BUILD_FOLDER  
             mkdir -p $BUILD_FOLDER  
             cd $BUILD_FOLDER  
             cmake .. -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}  
@@ -75,7 +74,7 @@ jobs:
             python3 -m pip list | grep amd  
             python3 -m pip list | grep pip  
             python3 -m pip list | grep setuptools  
-  
+
   # Uncomment and adjust the following section for RPM-based systems if needed  
   # build-and-install-rpm:  
   #   name: Build and Install on RPM-based Systems  
