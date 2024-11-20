@@ -29,18 +29,19 @@ jobs:
   
     steps:  
       - name: Checkout Repository  
-        uses: actions/checkout@v3  
+        uses: actions/checkout@v3 
         with:
-          clean: false
+          clean: false 
   
       - name: Build and Install on ${{ matrix.os }}  
         uses: addnab/docker-run-action@v3  
- 
-        with: 
+
+        with:  
           image: ${{ matrix.docker_image }}  
           options: >  
             --privileged  
             -v ${{ github.workspace }}:/src:rw  
+   
           run: |  
             set -e  
             cd /src  
