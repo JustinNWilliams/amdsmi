@@ -110,46 +110,46 @@ jobs:
               --privileged  
               -v ${{ github.workspace }}:/src:rw  
     
-          run: |  
-            set -ex  
-            cd /src  
-            echo 'Inside Docker Container on ${{ matrix.os }}'  
-    
-            # Build AMD-SMI  
-            BUILD_FOLDER=/src/build  
-            RPM_BUILD="amd-smi-lib-*99999-local*.rpm"  
-    
-            # Clean and prepare the build directory  
-            rm -rf $BUILD_FOLDER  
-            mkdir -p $BUILD_FOLDER  
-            cd $BUILD_FOLDER  
-            cmake .. -DCPACK_RPM_PACKAGE_RELOCATABLE=ON -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}  
-            make -j $(nproc)  
-            make package  
-    
-            # Adjust permissions of the build directory  
-            chmod -R a+rw $BUILD_FOLDER  
-    
-            # Install AMD-SMI  
-            case "${{ matrix.package_manager }}" in  
-              zypper)  
-                zypper --non-interactive --gpg-auto-import-keys install -y $BUILD_FOLDER/$RPM_BUILD  
-                ;;  
-              dnf)  
-                dnf install -y $BUILD_FOLDER/$RPM_BUILD  
-                ;;  
-              tdnf)  
-                tdnf install -y $BUILD_FOLDER/$RPM_BUILD  
-                ;;  
-              *)  
-                echo "Unsupported package manager: ${{ matrix.package_manager }}"  
-                exit 1  
-                ;;  
-            esac  
-    
-            ln -s /opt/rocm/bin/amd-smi /usr/local/bin  
-    
-            # Check If Installed  
-            echo "Listing installed packages:"  
-            python3 -m pip list | grep amd  
-            echo "Completed build and installation on ${{ matrix.os }}"  
+            run: |  
+              set -ex  
+              cd /src  
+              echo 'Inside Docker Container on ${{ matrix.os }}'  
+      
+              # Build AMD-SMI  
+              BUILD_FOLDER=/src/build  
+              RPM_BUILD="amd-smi-lib-*99999-local*.rpm"  
+      
+              # Clean and prepare the build directory  
+              rm -rf $BUILD_FOLDER  
+              mkdir -p $BUILD_FOLDER  
+              cd $BUILD_FOLDER  
+              cmake .. -DCPACK_RPM_PACKAGE_RELOCATABLE=ON -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}  
+              make -j $(nproc)  
+              make package  
+      
+              # Adjust permissions of the build directory  
+              chmod -R a+rw $BUILD_FOLDER  
+      
+              # Install AMD-SMI  
+              case "${{ matrix.package_manager }}" in  
+                zypper)  
+                  zypper --non-interactive --gpg-auto-import-keys install -y $BUILD_FOLDER/$RPM_BUILD  
+                  ;;  
+                dnf)  
+                  dnf install -y $BUILD_FOLDER/$RPM_BUILD  
+                  ;;  
+                tdnf)  
+                  tdnf install -y $BUILD_FOLDER/$RPM_BUILD  
+                  ;;  
+                *)  
+                  echo "Unsupported package manager: ${{ matrix.package_manager }}"  
+                  exit 1  
+                  ;;  
+              esac  
+      
+              ln -s /opt/rocm/bin/amd-smi /usr/local/bin  
+      
+              # Check If Installed  
+              echo "Listing installed packages:"  
+              python3 -m pip list | grep amd  
+              echo "Completed build and installation on ${{ matrix.os }}"  
