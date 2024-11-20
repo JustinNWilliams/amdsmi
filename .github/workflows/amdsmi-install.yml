@@ -36,7 +36,7 @@ jobs:
       - name: Build and Install on ${{ matrix.os }}  
         uses: addnab/docker-run-action@v3  
  
-        with:  
+        with: 
           image: ${{ matrix.docker_image }}  
           options: >  
             --privileged  
