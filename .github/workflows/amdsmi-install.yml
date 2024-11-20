@@ -93,7 +93,7 @@ jobs:
               enable_esmi_lib: OFF  
             - os: Mariner2  
               docker_image: compute-artifactory.amd.com:5000/rocm-base-images/mariner-2.0:2024101501  
-              package_manager: tdnf  
+              package_manager: dnf  
               build_tests: OFF  
               enable_esmi_lib: OFF  
             - os: AzureLinux3
