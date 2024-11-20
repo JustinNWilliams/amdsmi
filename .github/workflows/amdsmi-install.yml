@@ -9,8 +9,10 @@ jobs:
     runs-on: [self-hosted, Linux, X64, dev, ubuntu20.04]  
     steps:  
       # Checkout the repository once  
-      # - name: Checkout Repository  
-      #   uses: actions/checkout@v3  
+      - name: Checkout Repository  
+        uses: actions/checkout@v3  
+        with: 
+          clean: false 
   
       # Build and Install on Ubuntu 20.04  
       - name: Build and Install on Ubuntu 20.04  
