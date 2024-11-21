@@ -1,156 +1,156 @@
-name: Build and Install amdsmi for Multiple OS Versions  
-  
-on:  
-  push:  
-  
-jobs:  
-  build-and-install-deb:  
-    name: Build and Install on Debian-based Systems  
-    runs-on: [self-hosted, lsttdev5]  
-    strategy:  
-      matrix:  
-        os:  
-          - Ubuntu20  
-          - Ubuntu22  
-        include:  
-          - os: Ubuntu20  
-            docker_image: compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024091101  
-            build_tests: OFF  
-            enable_esmi_lib: OFF  
-          - os: Ubuntu22  
-            docker_image: compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-22.04-bld:2024091101  
-            build_tests: OFF  
-            enable_esmi_lib: OFF  
-  
-    steps:  
-      - name: Checkout Repository  
+name: Build and Install amdsmi for Multiple OS Versions
+
+on:
+  push:
+
+jobs:
+  build-and-install-deb:
+    name: Build and Install on Debian-based Systems
+    runs-on: [self-hosted, lsttdev5]
+    strategy:
+      matrix:
+        os:
+          - Ubuntu20
+          - Ubuntu22
+        include:
+          - os: Ubuntu20
+            docker_image: compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-20.04-bld:2024091101
+            build_tests: OFF
+            enable_esmi_lib: OFF
+          - os: Ubuntu22
+            docker_image: compute-artifactory.amd.com:5000/rocm-base-images/ubuntu-22.04-bld:2024091101
+            build_tests: OFF
+            enable_esmi_lib: OFF
+
+    steps:
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          clean: false 
-  
-      - name: Build and Install on ${{ matrix.os }}  
-        uses: addnab/docker-run-action@v3  
+          clean: false
 
-        with:  
-          image: ${{ matrix.docker_image }}  
-          options: >  
-            --privileged  
-            -v ${{ github.workspace }}:/src:rw  
-   
-          run: |  
-            set -e  
-            cd /src  
-            echo 'Inside Docker Container on ${{ matrix.os }}'  
-    
-            # Build AMD-SMI  
-            BUILD_FOLDER=/src/build  
-            DEB_BUILD="amd-smi-lib*99999-local_amd64.deb"  
-            DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"  
-    
-            # Remove existing build folder if it exists  
-            sudo rm -rf $BUILD_FOLDER  
-            mkdir -p $BUILD_FOLDER  
-            cd $BUILD_FOLDER  
-            cmake .. -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}  
-            make -j $(nproc)  
-            make package  
-    
-            # Install AMD-SMI  
-            sudo apt install -y $BUILD_FOLDER/$DEB_BUILD  
-            sudo ln -s /opt/rocm/bin/amd-smi /usr/local/bin  
-    
-            # Check If Installed  
-            python3 -m pip list | grep amd  
-            python3 -m pip list | grep pip  
-            python3 -m pip list | grep setuptools  
-  
-  build-and-install-rpm:  
-      name: Build and Install on RPM-based Systems  
+      - name: Build and Install on ${{ matrix.os }}
+        uses: addnab/docker-run-action@v3
+
+        with:
+          image: ${{ matrix.docker_image }}
+          options: >
+            --privileged
+            -v ${{ github.workspace }}:/src:rw
+
+          run: |
+            set -e
+            cd /src
+            echo 'Inside Docker Container on ${{ matrix.os }}'
+
+            # Build AMD-SMI
+            BUILD_FOLDER=/src/build
+            DEB_BUILD="amd-smi-lib*99999-local_amd64.deb"
+            DEB_BUILD_TEST="amd-smi-lib-tests*99999-local_amd64.deb"
+
+            # Remove existing build folder if it exists
+            sudo rm -rf $BUILD_FOLDER
+            mkdir -p $BUILD_FOLDER
+            cd $BUILD_FOLDER
+            cmake .. -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}
+            make -j $(nproc)
+            make package
+
+            # Install AMD-SMI
+            sudo apt install -y $BUILD_FOLDER/$DEB_BUILD
+            sudo ln -s /opt/rocm/bin/amd-smi /usr/local/bin
+
+            # Check If Installed
+            python3 -m pip list | grep amd
+            python3 -m pip list | grep pip
+            python3 -m pip list | grep setuptools
+
+  build-and-install-rpm:
+      name: Build and Install on RPM-based Systems
       runs-on: [self-hosted, lsttdev5]
-      strategy:  
-        matrix:  
-          os:  
-            - SLES  
-            - RHEL8  
-            - RHEL9  
-            - Mariner2  
+      strategy:
+        matrix:
+          os:
+            - SLES
+            - RHEL8
+            - RHEL9
+            - Mariner2
             - AzureLinux3
-          include:  
-            - os: SLES 
-              docker_image: compute-artifactory.amd.com:5000/rocm-base-images/sles-15.5:2024091101  
-              package_manager: zypper  
-              build_tests: OFF  
-              enable_esmi_lib: OFF  
-            - os: RHEL8  
-              docker_image: compute-artifactory.amd.com:5000/rocm-base-images/rhel-8.x-bld:2024110601  
-              package_manager: dnf  
-              build_tests: OFF  
-              enable_esmi_lib: OFF  
-            - os: RHEL9  
-              docker_image: compute-artifactory.amd.com:5000/rocm-base-images/rhel-9.x-bld:2024101501  
-              package_manager: dnf  
-              build_tests: OFF  
-              enable_esmi_lib: OFF  
-            - os: Mariner2  
-              docker_image: compute-artifactory.amd.com:5000/rocm-base-images/mariner-2.0:2024101501  
-              package_manager: dnf  
-              build_tests: OFF  
-              enable_esmi_lib: OFF  
+          include:
+            - os: SLES
+              docker_image: compute-artifactory.amd.com:5000/rocm-base-images/sles-15.5:2024091101
+              package_manager: zypper
+              build_tests: OFF
+              enable_esmi_lib: OFF
+            - os: RHEL8
+              docker_image: compute-artifactory.amd.com:5000/rocm-base-images/rhel-8.x-bld:2024110601
+              package_manager: dnf
+              build_tests: OFF
+              enable_esmi_lib: OFF
+            - os: RHEL9
+              docker_image: compute-artifactory.amd.com:5000/rocm-base-images/rhel-9.x-bld:2024101501
+              package_manager: dnf
+              build_tests: OFF
+              enable_esmi_lib: OFF
+            - os: Mariner2
+              docker_image: compute-artifactory.amd.com:5000/rocm-base-images/mariner-2.0:2024101501
+              package_manager: dnf
+              build_tests: OFF
+              enable_esmi_lib: OFF
             - os: AzureLinux3
               docker_image: compute-artifactory.amd.com:5000/rocm-base-images/azurelinux-3:2024100701
               package_manager: dnf
               build_tests: OFF
               enable_esmi_lib: OFF
-    
-      steps:  
-        - name: Checkout Repository  
-          uses: actions/checkout@v4  
-          with:  
-            clean: false  
-    
-        - name: Build and Install on ${{ matrix.os }}  
-          uses: addnab/docker-run-action@v3  
-          with:  
-            image: ${{ matrix.docker_image }}  
-            options: >  
-              --privileged  
-              -v ${{ github.workspace }}:/src:rw  
-    
-            run: |  
-              set -ex  
-              cd /src  
-              echo 'Inside Docker Container on ${{ matrix.os }}'  
-      
-              # Build AMD-SMI  
-              BUILD_FOLDER=/src/build  
-              RPM_BUILD="amd-smi-lib-*99999-local*.rpm"    
-              rm -rf $BUILD_FOLDER  
-              mkdir -p $BUILD_FOLDER  
-              cd $BUILD_FOLDER  
-              cmake .. -DCPACK_RPM_PACKAGE_RELOCATABLE=ON -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}  
-              make -j $(nproc)  
-              make package  
-      
-              # Adjust permissions of the build directory  
-              chmod -R a+rw $BUILD_FOLDER  
-      
-              # Install AMD-SMI  
-              case "${{ matrix.package_manager }}" in  
-                zypper)  
+
+      steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+          with:
+            clean: false
+
+        - name: Build and Install on ${{ matrix.os }}
+          uses: addnab/docker-run-action@v3
+          with:
+            image: ${{ matrix.docker_image }}
+            options: >
+              --privileged
+              -v ${{ github.workspace }}:/src:rw
+
+            run: |
+              set -ex
+              cd /src
+              echo 'Inside Docker Container on ${{ matrix.os }}'
+
+              # Build AMD-SMI
+              BUILD_FOLDER=/src/build
+              RPM_BUILD="amd-smi-lib-*99999-local*.rpm"
+              rm -rf $BUILD_FOLDER
+              mkdir -p $BUILD_FOLDER
+              cd $BUILD_FOLDER
+              cmake .. -DCPACK_RPM_PACKAGE_RELOCATABLE=ON -DBUILD_TESTS=${{ matrix.build_tests }} -DENABLE_ESMI_LIB=${{ matrix.enable_esmi_lib }}
+              make -j $(nproc)
+              make package
+
+              # Adjust permissions of the build directory
+              chmod -R a+rw $BUILD_FOLDER
+
+              # Install AMD-SMI
+              case "${{ matrix.package_manager }}" in
+                zypper)
                   sudo zypper --no-refresh --no-gpg-checks install -y $BUILD_FOLDER/$RPM_BUILD
-                  ;;  
-                dnf)  
-                  dnf install -y --skip-broken $BUILD_FOLDER/$RPM_BUILD  
-                  ;;   
-                *)  
-                  echo "Unsupported package manager: ${{ matrix.package_manager }}"  
-                  exit 1  
-                  ;;  
-              esac  
-      
-              ln -s /opt/rocm/bin/amd-smi /usr/local/bin  
-      
-              # Check If Installed  
-              echo "Listing installed packages:"  
-              python3 -m pip list | grep amd  
-              echo "Completed build and installation on ${{ matrix.os }}"  
+                  ;;
+                dnf)
+                  dnf install -y --skip-broken $BUILD_FOLDER/$RPM_BUILD
+                  ;;
+                *)
+                  echo "Unsupported package manager: ${{ matrix.package_manager }}"
+                  exit 1
+                  ;;
+              esac
+
+              ln -s /opt/rocm/bin/amd-smi /usr/local/bin
+
+              # Check If Installed
+              echo "Listing installed packages:"
+              python3 -m pip list | grep amd
+              echo "Completed build and installation on ${{ matrix.os }}"
