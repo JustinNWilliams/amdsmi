@@ -6,7 +6,7 @@ on:
 jobs:
   build-and-install-deb:
     name: Build and Install on Debian-based Systems
-    runs-on: [self-hosted, lsttdev5]
+    runs-on: [self-hosted, lsttserver4]
     strategy:
       matrix:
         os:
@@ -66,7 +66,7 @@ jobs:
 
   build-and-install-rpm:
       name: Build and Install on RPM-based Systems
-      runs-on: [self-hosted, lsttdev5]
+      runs-on: [self-hosted, lsttserver4]
       strategy:
         matrix:
           os:
