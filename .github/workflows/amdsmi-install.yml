@@ -153,4 +153,6 @@ jobs:
               # Check If Installed
               echo "Listing installed packages:"
               python3 -m pip list | grep amd
+              python3 -m pip list | grep pip
+              python3 -m pip list | grep setuptools
               echo "Completed build and installation on ${{ matrix.os }}"
