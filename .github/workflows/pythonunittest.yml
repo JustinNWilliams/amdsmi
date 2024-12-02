@@ -168,14 +168,16 @@ jobs:
               python3 -m pip list | grep setuptools  
               echo "Completed build and installation on ${{ matrix.os }}"  
   
-              # Run Python Unit Tests  
+               # Run Python Unit Tests  
               echo "Running Python Unit Tests"  
               cd /src/tests/python_unittest  
-              chmod +x run_all_python_unittests.sh
+              ls -l run_all_python_unittests.sh  
+              sudo chmod +x run_all_python_unittests.sh  
+              ls -l run_all_python_unittests.sh  
               ./run_all_python_unittests.sh > test_results_${{ matrix.os }}.txt  
   
         - name: Upload Test Results  
           uses: actions/upload-artifact@v3  
           with:  
             name: test-results-${{ matrix.os }}  
-            path: /src/tests/python_unittest/test_results_${{ matrix.os }}.txt  
+            path: /src/tests/python_unittest/test_results_${{ matrix.os }}.txt
