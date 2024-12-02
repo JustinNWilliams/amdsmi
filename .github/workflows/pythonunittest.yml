@@ -1,4 +1,4 @@
-name: Build, Install, and Test amdsmi for Multiple OS Versions  
+name: Python Unit Testing
   
 on:    
   workflow_dispatch:    
