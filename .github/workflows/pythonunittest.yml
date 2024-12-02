@@ -171,7 +171,8 @@ jobs:
               # Run Python Unit Tests  
               echo "Running Python Unit Tests"  
               cd /src/tests/python_unittest  
-              sudo ./run_all_python_unittests.sh > test_results_${{ matrix.os }}.txt  
+              chmod +x run_all_python_unittests.sh
+              ./run_all_python_unittests.sh > test_results_${{ matrix.os }}.txt  
   
         - name: Upload Test Results  
           uses: actions/upload-artifact@v3  
